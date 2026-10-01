@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý xe</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>QUẢN LÝ XE</h1>
+</header>
+
+<%- include("partials/nav") %>
+
+<main class="container">
+
+<section class="form-box">
+
+<h2>Thêm xe mới</h2>
+
+<form action="/vehicles/add" method="POST">
+
+    <input
+        type="text"
+        name="license_plate"
+        placeholder="Biển số xe"
+        required
+    >
+
+    <input
+        type="text"
+        name="vehicle_name"
+        placeholder="Tên xe"
+        required
+    >
+
+    <input
+        type="text"
+        name="brand"
+        placeholder="Hãng xe"
+    >
+
+    <input
+        type="number"
+        name="manufacture_year"
+        placeholder="Năm sản xuất"
+    >
+
+    <select name="status">
+        <option value="Sẵn sàng">
+            Sẵn sàng
+        </option>
+
+        <option value="Đang hoạt động">
+            Đang hoạt động
+        </option>
+
+        <option value="Bảo dưỡng">
+            Bảo dưỡng
+        </option>
+    </select>
+
+    <button type="submit" class="btn-add">
+        Thêm xe
+    </button>
+
+</form>
+
+</section>
+
+
+<h2>Danh sách xe</h2>
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Biển số</th>
+    <th>Tên xe</th>
+    <th>Hãng</th>
+    <th>Năm</th>
+    <th>Trạng thái</th>
+    <th>Thao tác</th>
+</tr>
+</thead>
+
+<tbody>
+
+<% vehicles.forEach(vehicle => { %>
+
+<tr>
+
+<form
+    action="/vehicles/update/<%= vehicle.id %>"
+    method="POST"
+>
+
+<td>
+    <%= vehicle.id %>
+</td>
+
+<td>
+    <input
+        name="license_plate"
+        value="<%= vehicle.license_plate %>"
+        required
+    >
+</td>
+
+<td>
+    <input
+        name="vehicle_name"
+        value="<%= vehicle.vehicle_name %>"
+        required
+    >
+</td>
+
+<td>
+    <input
+        name="brand"
+        value="<%= vehicle.brand || '' %>"
+    >
+</td>
+
+<td>
+    <input
+        type="number"
+        name="manufacture_year"
+        value="<%= vehicle.manufacture_year || '' %>"
+    >
+</td>
+
+<td>
+
+<select name="status">
+
+<option
+    value="Sẵn sàng"
+    <%= vehicle.status === "Sẵn sàng" ? "selected" : "" %>
+>
+Sẵn sàng
+</option>
+
+<option
+    value="Đang hoạt động"
+    <%= vehicle.status === "Đang hoạt động" ? "selected" : "" %>
+>
+Đang hoạt động
+</option>
+
+<option
+    value="Bảo dưỡng"
+    <%= vehicle.status === "Bảo dưỡng" ? "selected" : "" %>
+>
+Bảo dưỡng
+</option>
+
+</select>
+
+</td>
+
+<td class="actions">
+
+<button
+    type="submit"
+    class="btn-edit"
+>
+Lưu
+</button>
+
+</form>
+
+<form
+    action="/vehicles/delete/<%= vehicle.id %>"
+    method="POST"
+>
+
+<button
+    type="submit"
+    class="btn-delete"
+>
+Xóa
+</button>
+
+</form>
+
+</td>
+
+</tr>
+
+<% }) %>
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+</body>
+</html>

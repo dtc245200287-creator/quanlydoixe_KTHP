@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Quản lý lịch trình</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+</head>
+
+
+<body>
+
+<header>
+
+    <h1>
+        QUẢN LÝ LỊCH TRÌNH
+    </h1>
+
+</header>
+
+
+<%- include("partials/nav") %>
+
+
+<main class="container">
+
+
+    <!-- =========================
+         THÊM LỊCH TRÌNH
+    ========================== -->
+
+    <section class="form-box">
+
+        <h2>
+            Thêm lịch trình
+        </h2>
+
+
+        <form
+            action="/schedules/add"
+            method="POST"
+        >
+
+
+            <!-- CHỌN XE -->
+
+            <select
+                name="vehicle_id"
+                required
+            >
+
+                <% vehicles.forEach(vehicle => { %>
+
+                    <option
+                        value="<%= vehicle.id %>"
+                    >
+
+                        <%= vehicle.license_plate %>
+                        -
+                        <%= vehicle.vehicle_name %>
+
+                    </option>
+
+                <% }) %>
+
+            </select>
+
+
+            <!-- CHỌN TÀI XẾ -->
+
+            <select
+                name="driver_id"
+                required
+            >
+
+                <% drivers.forEach(driver => { %>
+
+                    <option
+                        value="<%= driver.id %>"
+                    >
+
+                        <%= driver.full_name %>
+
+                    </option>
+
+                <% }) %>
+
+            </select>
+
+
+            <!-- TUYẾN ĐƯỜNG -->
+
+            <input
+                type="text"
+                name="route"
+                placeholder="Ví dụ: Thái Nguyên - Hà Nội"
+                required
+            >
+
+
+            <!-- THỜI GIAN BẮT ĐẦU -->
+
+            <input
+                type="datetime-local"
+                name="start_time"
+                required
+            >
+
+
+            <!-- THỜI GIAN KẾT THÚC -->
+
+            <input
+                type="datetime-local"
+                name="end_time"
+            >
+
+
+            <!-- NÚT THÊM -->
+
+            <button
+                type="submit"
+                class="btn-add"
+            >
+
+                Thêm lịch trình
+
+            </button>
+
+
+        </form>
+
+    </section>
+
+
+
+    <!-- =========================
+         DANH SÁCH LỊCH TRÌNH
+    ========================== -->
+
+    <h2>
+        Danh sách lịch trình
+    </h2>
+
+
+    <div class="table-wrapper">
+
+
+        <table>
+
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        ID
+                    </th>
+
+                    <th>
+                        Xe
+                    </th>
+
+                    <th>
+                        Tài xế
+                    </th>
+
+                    <th>
+                        Tuyến đường
+                    </th>
+
+                    <th>
+                        Bắt đầu
+                    </th>
+
+                    <th>
+                        Kết thúc
+                    </th>
+
+                    <th>
+                        Thao tác
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+                <% schedules.forEach(schedule => { %>
+
+
+                    <tr>
+
+
+                        <!-- ID -->
+
+                        <td>
+
+                            <%= schedule.id %>
+
+                        </td>
+
+
+                        <!-- XE -->
+
+                        <td>
+
+                            <select
+                                form="update-schedule-<%= schedule.id %>"
+                                name="vehicle_id"
+                                required
+                            >
+
+                                <% vehicles.forEach(vehicle => { %>
+
+                                    <option
+                                        value="<%= vehicle.id %>"
+
+                                        <%= vehicle.id === schedule.vehicle_id
+                                            ? "selected"
+                                            : ""
+                                        %>
+                                    >
+
+                                        <%= vehicle.license_plate %>
+                                        -
+                                        <%= vehicle.vehicle_name %>
+
+                                    </option>
+
+                                <% }) %>
+
+                            </select>
+
+                        </td>
+
+
+                        <!-- TÀI XẾ -->
+
+                        <td>
+
+                            <select
+                                form="update-schedule-<%= schedule.id %>"
+                                name="driver_id"
+                                required
+                            >
+
+                                <% drivers.forEach(driver => { %>
+
+                                    <option
+                                        value="<%= driver.id %>"
+
+                                        <%= driver.id === schedule.driver_id
+                                            ? "selected"
+                                            : ""
+                                        %>
+                                    >
+
+                                        <%= driver.full_name %>
+
+                                    </option>
+
+                                <% }) %>
+
+                            </select>
+
+                        </td>
+
+
+                        <!-- TUYẾN ĐƯỜNG -->
+
+                        <td>
+
+                            <input
+                                form="update-schedule-<%= schedule.id %>"
+                                type="text"
+                                name="route"
+
+                                value="<%= schedule.route %>"
+
+                                required
+                            >
+
+                        </td>
+
+
+                        <!-- BẮT ĐẦU -->
+
+                        <td>
+
+                            <input
+                                form="update-schedule-<%= schedule.id %>"
+                                type="datetime-local"
+                                name="start_time"
+
+                                value="<%=
+                                    new Date(
+                                        schedule.start_time
+                                    )
+                                    .toISOString()
+                                    .slice(0,16)
+                                %>"
+
+                                required
+                            >
+
+                        </td>
+
+
+                        <!-- KẾT THÚC -->
+
+                        <td>
+
+                            <input
+                                form="update-schedule-<%= schedule.id %>"
+                                type="datetime-local"
+                                name="end_time"
+
+                                value="<%=
+                                    schedule.end_time
+                                    ? new Date(
+                                        schedule.end_time
+                                      )
+                                      .toISOString()
+                                      .slice(0,16)
+                                    : ""
+                                %>"
+                            >
+
+                        </td>
+
+
+                        <!-- THAO TÁC -->
+
+                        <td class="actions">
+
+
+                            <form
+                                id="update-schedule-<%= schedule.id %>"
+
+                                action="/schedules/update/<%= schedule.id %>"
+
+                                method="POST"
+                            >
+
+                                <button
+                                    type="submit"
+                                    class="btn-edit"
+                                >
+
+                                    Lưu
+
+                                </button>
+
+                            </form>
+
+
+                            <form
+                                action="/schedules/delete/<%= schedule.id %>"
+
+                                method="POST"
+                            >
+
+                                <button
+                                    type="submit"
+                                    class="btn-delete"
+                                >
+
+                                    Xóa
+
+                                </button>
+
+                            </form>
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                <% }) %>
+
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+</main>
+
+
+</body>
+
+</html>

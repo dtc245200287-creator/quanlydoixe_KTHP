@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý tài xế</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>QUẢN LÝ TÀI XẾ</h1>
+</header>
+
+<%- include("partials/nav") %>
+
+<main class="container">
+
+<section class="form-box">
+
+<h2>Thêm tài xế</h2>
+
+<form action="/drivers/add" method="POST">
+
+    <input
+        type="text"
+        name="full_name"
+        placeholder="Họ và tên"
+        required
+    >
+
+    <input
+        type="text"
+        name="license_number"
+        placeholder="Số giấy phép lái xe"
+        required
+    >
+
+    <input
+        type="text"
+        name="phone"
+        placeholder="Số điện thoại"
+    >
+
+    <button
+        type="submit"
+        class="btn-add"
+    >
+        Thêm tài xế
+    </button>
+
+</form>
+
+</section>
+
+
+<h2>Danh sách tài xế</h2>
+
+<table>
+
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Họ tên</th>
+    <th>Giấy phép</th>
+    <th>Số điện thoại</th>
+    <th>Thao tác</th>
+</tr>
+</thead>
+
+<tbody>
+
+<% drivers.forEach(driver => { %>
+
+<tr>
+
+<form
+    action="/drivers/update/<%= driver.id %>"
+    method="POST"
+>
+
+<td>
+    <%= driver.id %>
+</td>
+
+<td>
+    <input
+        name="full_name"
+        value="<%= driver.full_name %>"
+        required
+    >
+</td>
+
+<td>
+    <input
+        name="license_number"
+        value="<%= driver.license_number %>"
+        required
+    >
+</td>
+
+<td>
+    <input
+        name="phone"
+        value="<%= driver.phone || '' %>"
+    >
+</td>
+
+<td class="actions">
+
+<button
+    type="submit"
+    class="btn-edit"
+>
+Lưu
+</button>
+
+</form>
+
+<form
+    action="/drivers/delete/<%= driver.id %>"
+    method="POST"
+>
+
+<button
+    type="submit"
+    class="btn-delete"
+>
+Xóa
+</button>
+
+</form>
+
+</td>
+
+</tr>
+
+<% }) %>
+
+</tbody>
+
+</table>
+
+</main>
+
+</body>
+</html>

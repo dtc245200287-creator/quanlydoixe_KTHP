@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Đội xe</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>HỆ THỐNG QUẢN LÝ ĐỘI XE</h1>
+    <p>Fleet Management System</p>
+</header>
+
+<%- include("partials/nav") %>
+
+<main class="container">
+
+    <h2>Tổng quan hệ thống</h2>
+
+    <div class="dashboard">
+
+        <a href="/vehicles" class="card">
+            <h3>Xe</h3>
+            <p><%= vehicleCount %></p>
+            <span>Quản lý xe</span>
+        </a>
+
+        <a href="/drivers" class="card">
+            <h3>Tài xế</h3>
+            <p><%= driverCount %></p>
+            <span>Quản lý tài xế</span>
+        </a>
+
+        <a href="/maintenance" class="card">
+            <h3>Bảo dưỡng</h3>
+            <p><%= maintenanceCount %></p>
+            <span>Lịch sử bảo dưỡng</span>
+        </a>
+
+        <a href="/schedules" class="card">
+            <h3>Lịch trình</h3>
+            <p><%= scheduleCount %></p>
+            <span>Quản lý lịch trình</span>
+        </a>
+
+    </div>
+
+</main>
+
+<footer>
+    Hệ thống Quản lý Đội xe
+</footer>
+
+</body>
+</html>

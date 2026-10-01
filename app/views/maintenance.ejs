@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Quản lý bảo dưỡng</title>
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+</head>
+
+
+<body>
+
+<header>
+
+    <h1>
+        QUẢN LÝ BẢO DƯỠNG
+    </h1>
+
+</header>
+
+
+<%- include("partials/nav") %>
+
+
+<main class="container">
+
+
+    <!-- =========================
+         THÊM BẢO DƯỠNG
+    ========================== -->
+
+    <section class="form-box">
+
+        <h2>
+            Thêm bảo dưỡng
+        </h2>
+
+
+        <form
+            action="/maintenance/add"
+            method="POST"
+        >
+
+
+            <!-- CHỌN XE -->
+
+            <select
+                name="vehicle_id"
+                required
+            >
+
+                <% vehicles.forEach(vehicle => { %>
+
+                    <option
+                        value="<%= vehicle.id %>"
+                    >
+
+                        <%= vehicle.license_plate %>
+                        -
+                        <%= vehicle.vehicle_name %>
+
+                    </option>
+
+                <% }) %>
+
+            </select>
+
+
+            <!-- NGÀY BẢO DƯỠNG -->
+
+            <input
+                type="date"
+                name="maintenance_date"
+                required
+            >
+
+
+            <!-- NỘI DUNG -->
+
+            <input
+                type="text"
+                name="description"
+                placeholder="Nội dung bảo dưỡng"
+                required
+            >
+
+
+            <!-- CHI PHÍ -->
+
+            <input
+                type="number"
+                name="cost"
+                placeholder="Ví dụ: 850000"
+                min="0"
+                step="1000"
+                required
+            >
+
+
+            <!-- NÚT THÊM -->
+
+            <button
+                type="submit"
+                class="btn-add"
+            >
+
+                Thêm bảo dưỡng
+
+            </button>
+
+
+        </form>
+
+    </section>
+
+
+
+    <!-- =========================
+         DANH SÁCH BẢO DƯỠNG
+    ========================== -->
+
+    <h2>
+        Lịch sử bảo dưỡng
+    </h2>
+
+
+    <div class="table-wrapper">
+
+
+        <table>
+
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        ID
+                    </th>
+
+                    <th>
+                        Xe
+                    </th>
+
+                    <th>
+                        Ngày
+                    </th>
+
+                    <th>
+                        Nội dung
+                    </th>
+
+                    <th>
+                        Chi phí
+                    </th>
+
+                    <th>
+                        Thao tác
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+                <% records.forEach(record => { %>
+
+
+                    <tr>
+
+
+                        <!-- ID -->
+
+                        <td>
+
+                            <%= record.id %>
+
+                        </td>
+
+
+                        <!-- XE -->
+
+                        <td>
+
+                            <select
+                                form="update-maintenance-<%= record.id %>"
+                                name="vehicle_id"
+                                required
+                            >
+
+                                <% vehicles.forEach(vehicle => { %>
+
+                                    <option
+                                        value="<%= vehicle.id %>"
+
+                                        <%= vehicle.id === record.vehicle_id
+                                            ? "selected"
+                                            : ""
+                                        %>
+                                    >
+
+                                        <%= vehicle.license_plate %>
+                                        -
+                                        <%= vehicle.vehicle_name %>
+
+                                    </option>
+
+                                <% }) %>
+
+                            </select>
+
+                        </td>
+
+
+                        <!-- NGÀY -->
+
+                        <td>
+
+                            <input
+                                form="update-maintenance-<%= record.id %>"
+                                type="date"
+                                name="maintenance_date"
+
+                                value="<%=
+                                    new Date(
+                                        record.maintenance_date
+                                    )
+                                    .toISOString()
+                                    .split('T')[0]
+                                %>"
+
+                                required
+                            >
+
+                        </td>
+
+
+                        <!-- NỘI DUNG -->
+
+                        <td>
+
+                            <input
+                                form="update-maintenance-<%= record.id %>"
+                                type="text"
+                                name="description"
+
+                                value="<%= record.description %>"
+
+                                required
+                            >
+
+                        </td>
+
+
+                        <!-- CHI PHÍ -->
+
+                        <td>
+
+                            <input
+                                form="update-maintenance-<%= record.id %>"
+                                type="number"
+                                name="cost"
+
+                                value="<%=
+                                    Math.round(
+                                        Number(record.cost)
+                                    )
+                                %>"
+
+                                min="0"
+                                step="1000"
+                                required
+                            >
+
+                        </td>
+
+
+                        <!-- THAO TÁC -->
+
+                        <td class="actions">
+
+
+                            <!-- FORM CẬP NHẬT -->
+
+                            <form
+                                id="update-maintenance-<%= record.id %>"
+
+                                action="/maintenance/update/<%= record.id %>"
+
+                                method="POST"
+                            >
+
+                                <button
+                                    type="submit"
+                                    class="btn-edit"
+                                >
+
+                                    Lưu
+
+                                </button>
+
+                            </form>
+
+
+                            <!-- FORM XÓA -->
+
+                            <form
+                                action="/maintenance/delete/<%= record.id %>"
+
+                                method="POST"
+                            >
+
+                                <button
+                                    type="submit"
+                                    class="btn-delete"
+                                >
+
+                                    Xóa
+
+                                </button>
+
+                            </form>
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                <% }) %>
+
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+</main>
+
+
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "fleet-management",
+  "version": "1.0.0",
+  "description": "He thong Quan ly Doi xe Fleet",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "express-session": "^1.18.1",
+    "pg": "^8.13.0"
+  }
+}

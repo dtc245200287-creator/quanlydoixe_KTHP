@@ -1,0 +1,52 @@
+<nav class="main-nav">
+
+    <div class="nav-links">
+
+        <a href="/">
+            Trang chủ
+        </a>
+
+        <a href="/vehicles">
+            Quản lý xe
+        </a>
+
+        <a href="/drivers">
+            Tài xế
+        </a>
+
+        <a href="/maintenance">
+            Bảo dưỡng
+        </a>
+
+        <a href="/schedules">
+            Lịch trình
+        </a>
+
+    </div>
+
+
+    <div class="user-area">
+
+        <span>
+            Xin chào,
+            <%= currentUser.username %>
+        </span>
+
+
+        <form
+            action="/logout"
+            method="POST"
+        >
+
+            <button
+                type="submit"
+                class="btn-logout"
+            >
+                Đăng xuất
+            </button>
+
+        </form>
+
+    </div>
+
+</nav>
