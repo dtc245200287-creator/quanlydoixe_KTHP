@@ -85,3 +85,37 @@ Mật khẩu không được lưu trực tiếp trong mã nguồn. Ứng dụng 
 Sau khi đăng nhập thành công, người dùng có thể sử dụng các chức năng quản lý xe, tài xế, bảo dưỡng và lịch trình.
 
 Người dùng có thể sử dụng chức năng Đăng xuất để kết thúc phiên làm việc.
+
+## 10. Giám sát hệ thống
+
+Hệ thống sử dụng Prometheus và Grafana để giám sát các thành phần triển khai bằng Docker Compose.
+
+### Prometheus
+
+Truy cập:
+
+http://localhost:9090
+
+Prometheus thu thập metrics từ:
+
+- cAdvisor: giám sát container
+- Nginx Prometheus Exporter: giám sát Nginx
+- PostgreSQL Exporter: giám sát PostgreSQL
+
+### Grafana
+
+Truy cập:
+
+http://localhost:3001
+
+Dashboard:
+
+Fleet Management Monitoring
+
+Dashboard gồm:
+
+- Container Memory Usage
+- Nginx Active Connections
+- PostgreSQL Status
+
+Grafana sử dụng Prometheus làm Data Source.
