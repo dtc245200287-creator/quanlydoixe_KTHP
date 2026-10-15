@@ -19,6 +19,56 @@ const pool = new Pool({
     database: process.env.DB_NAME || "fleetdb"
 });
 
+/* =====================================================
+   NHẬT KÝ NGHIỆP VỤ / AUDIT LOG
+===================================================== */
+
+async function initializeAuditLogs() {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(50) NOT NULL,
+            action VARCHAR(50) NOT NULL,
+            entity_type VARCHAR(50),
+            entity_id INTEGER,
+            details TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+}
+
+async function writeAudit(
+    username,
+    action,
+    entityType = null,
+    entityId = null,
+    details = null
+) {
+    try {
+        await pool.query(
+            `
+            INSERT INTO audit_logs (
+                username,
+                action,
+                entity_type,
+                entity_id,
+                details
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            `,
+            [
+                username || "system",
+                action,
+                entityType,
+                entityId,
+                details
+            ]
+        );
+    } catch (error) {
+        console.error("AUDIT LOG ERROR:", error);
+    }
+}
+
 
 /* =====================================================
    CẤU HÌNH EXPRESS
@@ -172,6 +222,14 @@ const password = req.body.password || "";
             username: user.username
         };
 
+await writeAudit(
+    user.username,
+    "LOGIN",
+    "auth",
+    user.id,
+    "Đăng nhập hệ thống thành công"
+    );
+
         res.redirect("/");
 
     } catch (error) {
@@ -189,12 +247,25 @@ const password = req.body.password || "";
    ĐĂNG XUẤT
 ===================================================== */
 
-app.post("/logout", (req, res) => {
+app.post("/logout", async (req, res) => {
+
+    const username =
+        req.session.user?.username || "unknown";
+
+    const userId =
+        req.session.user?.id || null;
+
+    await writeAudit(
+        username,
+        "LOGOUT",
+        "auth",
+        userId,
+        "Đăng xuất khỏi hệ thống"
+    );
 
     req.session.destroy((error) => {
 
         if (error) {
-
             console.error(error);
 
             return res.status(500).send(
@@ -335,27 +406,37 @@ app.post("/vehicles/add", async (req, res) => {
 
     try {
 
-        await pool.query(
-            `
-            INSERT INTO vehicles (
-                license_plate,
-                vehicle_name,
-                brand,
-                manufacture_year,
-                status
-            )
-            VALUES ($1,$2,$3,$4,$5)
-            `,
-            [
-                license_plate,
-                vehicle_name,
-                brand,
-                manufacture_year || null,
-                status
-            ]
-        );
+        const result = await pool.query(
+    `
+    INSERT INTO vehicles (
+        license_plate,
+        vehicle_name,
+        brand,
+        manufacture_year,
+        status
+    )
+    VALUES ($1,$2,$3,$4,$5)
 
-        res.redirect("/vehicles");
+    RETURNING id
+    `,
+    [
+        license_plate,
+        vehicle_name,
+        brand,
+        manufacture_year || null,
+        status
+    ]
+);
+
+await writeAudit(
+    req.session.user.username,
+    "CREATE_VEHICLE",
+    "vehicle",
+    result.rows[0].id,
+    `Thêm xe ${license_plate} - ${vehicle_name}`
+);
+
+res.redirect("/vehicles");
 
     } catch (error) {
 
@@ -401,6 +482,14 @@ app.post("/vehicles/update/:id", async (req, res) => {
             ]
         );
 
+await writeAudit(
+    req.session.user.username,
+    "UPDATE_VEHICLE",
+    "vehicle",
+    Number(req.params.id),
+    `Cập nhật xe ${license_plate} - ${vehicle_name}, trạng thái ${status}`
+);
+
         res.redirect("/vehicles");
 
     } catch (error) {
@@ -418,10 +507,25 @@ app.post("/vehicles/delete/:id", async (req, res) => {
 
     try {
 
-        await pool.query(
-            "DELETE FROM vehicles WHERE id = $1",
-            [req.params.id]
-        );
+        const deleted = await pool.query(
+    `
+    DELETE FROM vehicles
+    WHERE id = $1
+    RETURNING license_plate, vehicle_name
+    `,
+    [req.params.id]
+);
+
+if (deleted.rows.length > 0) {
+    await writeAudit(
+        req.session.user.username,
+        "DELETE_VEHICLE",
+        "vehicle",
+        Number(req.params.id),
+        `Xóa xe ${deleted.rows[0].license_plate} - ${deleted.rows[0].vehicle_name}`
+    );
+}
+
 
         res.redirect("/vehicles");
 
@@ -476,23 +580,32 @@ app.post("/drivers/add", async (req, res) => {
 
     try {
 
-        await pool.query(
-            `
-            INSERT INTO drivers (
-                full_name,
-                license_number,
-                phone
-            )
-            VALUES ($1,$2,$3)
-            `,
-            [
-                full_name,
-                license_number,
-                phone
-            ]
-        );
+       const result = await pool.query(
+    `
+    INSERT INTO drivers (
+        full_name,
+        license_number,
+        phone
+    )
+    VALUES ($1,$2,$3)
+    RETURNING id
+    `,
+    [
+        full_name,
+        license_number,
+        phone
+    ]
+);
 
-        res.redirect("/drivers");
+await writeAudit(
+    req.session.user.username,
+    "CREATE_DRIVER",
+    "driver",
+    result.rows[0].id,
+    `Thêm tài xế ${full_name} - GPLX ${license_number}`
+);
+
+res.redirect("/drivers");
 
     } catch (error) {
 
@@ -532,6 +645,13 @@ app.post("/drivers/update/:id", async (req, res) => {
             ]
         );
 
+await writeAudit(
+    req.session.user.username,
+    "UPDATE_DRIVER",
+    "driver",
+    Number(req.params.id),
+    `Cập nhật tài xế ${full_name} - GPLX ${license_number}`
+);
         res.redirect("/drivers");
 
     } catch (error) {
@@ -549,10 +669,24 @@ app.post("/drivers/delete/:id", async (req, res) => {
 
     try {
 
-        await pool.query(
-            "DELETE FROM drivers WHERE id = $1",
-            [req.params.id]
-        );
+        const deleted = await pool.query(
+    `
+    DELETE FROM drivers
+    WHERE id = $1
+    RETURNING full_name, license_number
+    `,
+    [req.params.id]
+);
+
+if (deleted.rows.length > 0) {
+    await writeAudit(
+        req.session.user.username,
+        "DELETE_DRIVER",
+        "driver",
+        Number(req.params.id),
+        `Xóa tài xế ${deleted.rows[0].full_name} - GPLX ${deleted.rows[0].license_number}`
+    );
+}
 
         res.redirect("/drivers");
 
@@ -622,25 +756,34 @@ app.post("/maintenance/add", async (req, res) => {
 
     try {
 
-        await pool.query(
-            `
-            INSERT INTO maintenance (
-                vehicle_id,
-                maintenance_date,
-                description,
-                cost
-            )
-            VALUES ($1,$2,$3,$4)
-            `,
-            [
-                vehicle_id,
-                maintenance_date,
-                description,
-                cost || 0
-            ]
-        );
+       const result = await pool.query(
+    `
+    INSERT INTO maintenance (
+        vehicle_id,
+        maintenance_date,
+        description,
+        cost
+    )
+    VALUES ($1,$2,$3,$4)
+    RETURNING id
+    `,
+    [
+        vehicle_id,
+        maintenance_date,
+        description,
+        cost || 0
+    ]
+);
 
-        res.redirect("/maintenance");
+await writeAudit(
+    req.session.user.username,
+    "CREATE_MAINTENANCE",
+    "maintenance",
+    result.rows[0].id,
+    `Thêm bảo dưỡng xe ID ${vehicle_id}: ${description}, chi phí ${cost || 0}`
+);
+
+res.redirect("/maintenance");
 
     } catch (error) {
 
@@ -685,6 +828,13 @@ app.post(
                 ]
             );
 
+await writeAudit(
+    req.session.user.username,
+    "UPDATE_MAINTENANCE",
+    "maintenance",
+    Number(req.params.id),
+    `Cập nhật bảo dưỡng xe ID ${vehicle_id}: ${description}, chi phí ${cost || 0}`
+);
             res.redirect("/maintenance");
 
         } catch (error) {
@@ -705,10 +855,24 @@ app.post(
 
         try {
 
-            await pool.query(
-                "DELETE FROM maintenance WHERE id = $1",
-                [req.params.id]
-            );
+            const deleted = await pool.query(
+    `
+    DELETE FROM maintenance
+    WHERE id = $1
+    RETURNING vehicle_id, description, cost
+    `,
+    [req.params.id]
+);
+
+if (deleted.rows.length > 0) {
+    await writeAudit(
+        req.session.user.username,
+        "DELETE_MAINTENANCE",
+        "maintenance",
+        Number(req.params.id),
+        `Xóa bảo dưỡng xe ID ${deleted.rows[0].vehicle_id}: ${deleted.rows[0].description}`
+    );
+}
 
             res.redirect("/maintenance");
 
@@ -791,27 +955,36 @@ app.post("/schedules/add", async (req, res) => {
 
     try {
 
-        await pool.query(
-            `
-            INSERT INTO schedules (
-                vehicle_id,
-                driver_id,
-                route,
-                start_time,
-                end_time
-            )
-            VALUES ($1,$2,$3,$4,$5)
-            `,
-            [
-                vehicle_id,
-                driver_id,
-                route,
-                start_time,
-                end_time || null
-            ]
-        );
+        const result = await pool.query(
+    `
+    INSERT INTO schedules (
+        vehicle_id,
+        driver_id,
+        route,
+        start_time,
+        end_time
+    )
+    VALUES ($1,$2,$3,$4,$5)
+    RETURNING id
+    `,
+    [
+        vehicle_id,
+        driver_id,
+        route,
+        start_time,
+        end_time || null
+    ]
+);
 
-        res.redirect("/schedules");
+await writeAudit(
+    req.session.user.username,
+    "CREATE_SCHEDULE",
+    "schedule",
+    result.rows[0].id,
+    `Thêm lịch trình ${route} - xe ID ${vehicle_id} - tài xế ID ${driver_id}`
+);
+
+res.redirect("/schedules");
 
     } catch (error) {
 
@@ -859,6 +1032,14 @@ app.post(
                 ]
             );
 
+await writeAudit(
+    req.session.user.username,
+    "UPDATE_SCHEDULE",
+    "schedule",
+    Number(req.params.id),
+    `Cập nhật lịch trình ${route} - xe ID ${vehicle_id} - tài xế ID ${driver_id}`
+);
+
             res.redirect("/schedules");
 
         } catch (error) {
@@ -879,10 +1060,24 @@ app.post(
 
         try {
 
-            await pool.query(
-                "DELETE FROM schedules WHERE id = $1",
-                [req.params.id]
-            );
+           const deleted = await pool.query(
+    `
+    DELETE FROM schedules
+    WHERE id = $1
+    RETURNING route, vehicle_id, driver_id
+    `,
+    [req.params.id]
+);
+
+if (deleted.rows.length > 0) {
+    await writeAudit(
+        req.session.user.username,
+        "DELETE_SCHEDULE",
+        "schedule",
+        Number(req.params.id),
+        `Xóa lịch trình ${deleted.rows[0].route}`
+    );
+}
 
             res.redirect("/schedules");
 
@@ -910,7 +1105,7 @@ async function startServer() {
     try {
 
         await initializeAdmin();
-
+        await initializeAuditLogs();
         app.listen(
             PORT,
             "0.0.0.0",

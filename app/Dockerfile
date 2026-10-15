@@ -6,9 +6,7 @@ COPY package*.json ./
 
 RUN npm install --omit=dev
 
-COPY . .
-
-RUN chown -R node:node /app
+COPY --chown=node:node . .
 
 USER node
 
